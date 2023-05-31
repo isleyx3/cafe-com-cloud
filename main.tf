@@ -16,7 +16,7 @@ resource "google_compute_subnetwork" "default" {
 resource "google_compute_instance" "default" {
   name         = "cafe-vm"
   machine_type = "f1-micro"
-  zone         = "us-east1-a"
+  zone         = "us-east1-b"
   tags         = ["ssh"]
 
   boot_disk {

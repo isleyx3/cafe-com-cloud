@@ -8,9 +8,11 @@ terraform {
 }
 
 provider "google" {
+  project = "poc-ipnet-cloud"
   # Configuration options
 }
 
 provider "google-beta" {
+  project = "poc-ipnet-cloud"
   # Configuration options
 }

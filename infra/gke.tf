@@ -91,9 +91,9 @@ module "gke" {
     all = {}
   }
 
-  depends_on = [ 
+  depends_on = [
     module.vpc-network,
     module.subnet-network
-   ]
+  ]
 
 }

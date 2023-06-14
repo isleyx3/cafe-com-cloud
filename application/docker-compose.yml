@@ -1,0 +1,16 @@
+version: "3.7"
+ 
+services:
+  api-python:
+    container_name: api-books
+    build:
+        context: .
+        target: development
+        dockerfile: Dockerfile 
+    ports:
+      - 5000:5000
+    tty: true   
+
+networks: 
+    api-python-network:
+      driver: bridge  

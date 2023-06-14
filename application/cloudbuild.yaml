@@ -1,0 +1,127 @@
+steps:
+# Setup de variáveis de ambiente
+
+# Teste unitário
+ 
+# SonarQube
+  - name: gcr.io/cloud-builders/docker
+    id: Análise de qualidade
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        source /workspace/vars
+        docker run \
+        --rm \
+        -e SONAR_HOST_URL=$$SONAR_HOST_URL \
+        -e SONAR_LOGIN=$$SONAR_LOGIN \
+        -v "/workspace/:/usr/src" \
+        sonarsource/sonar-scanner-cli \
+        -Dsonar.projectKey=$REPO_NAME$$ENV \
+        -Dsonar.qualitygate.wait=true \
+        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+    secretEnv:
+      - SONAR_LOGIN
+
+# Build da imagem do container
+  - name: gcr.io/cloud-builders/docker
+    id: Build
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        source /workspace/vars
+        docker build -t \
+          southamerica-east1-docker.pkg.dev/also-devops/$REPO_NAME/$REPO_NAME$$ENV:$SHORT_SHA .
+
+# Push da imagem do container
+  - name: gcr.io/cloud-builders/docker
+    id: push
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        source /workspace/vars
+
+        docker push southamerica-east1-docker.pkg.dev/also-devops/$REPO_NAME/$REPO_NAME$$ENV:$SHORT_SHA
+
+# Setup da conexão com GitHub
+  - name: gcr.io/cloud-builders/git
+    id: Setup github
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        ssh-keyscan -t rsa github.com > known_hosts.github
+        echo "$$SSH_KEY" >> /root/.ssh/id_rsa
+        chmod 400 /root/.ssh/id_rsa
+        cp known_hosts.github /root/.ssh/known_hosts
+    secretEnv:
+      - SSH_KEY
+    volumes:
+      - name: ssh
+        path: /root/.ssh
+
+# Renderização dos manifestos
+  - name: gcr.io/cloud-builders/git
+    id: Renderizaçao yamls
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        source /workspace/vars
+
+        git clone git@github.com:arquitetura-also/$REPO_NAME-env.git
+        cd $REPO_NAME-env
+        git checkout $BRANCH_NAME
+        sed -i "s|\(.$REPO_NAME$$ENV:.*\)|\/$REPO_NAME$$ENV:$SHORT_SHA|g" *-dp.yaml
+        cat *-dp.yaml
+    volumes:
+      - name: ssh
+        path: /root/.ssh
+
+# Atualização dos manifestos
+  - name: gcr.io/cloud-builders/git
+    id: Atualização yamls
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        cd $REPO_NAME-env
+
+        git checkout $BRANCH_NAME
+        git config --global user.email "cloudbuild@also.com"
+        git config --global user.name "Cloud Build"
+        git add .
+        git commit -m "Atualizando manifestos para imagem $REPO_NAME$$ENV:$SHORT_SHA"
+        git push
+    volumes:
+      - name: ssh
+        path: /root/.ssh
+
+  - id: Cache purge
+    name: gcr.io/cloud-builders/curl
+    entrypoint: bash
+    args:
+    - -c
+    - |
+      source /workspace/vars
+
+      curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+      chmod +x /usr/local/bin/argocd
+
+      argocd login $$ARGOCD_HOST_URL \
+        --username admin \
+        --password $$ARGOCD_PASSWORD
+      
+      argocd app sync $REPO_NAME$$ENV
+
+      echo {'"'hosts'"': ['"'$$APP_HOST$$URL_ENV.msalso.com'"']} > data.json
+      curl -X POST "https://api.cloudflare.com/client/v4/zones/f995c9f10d0e7b0006b1b456193e21a3/purge_cache" \
+        -H "Content-Type:application/json" \
+        -H "Authorization: Bearer $$CLOUDFLARE_API_TOKEN" \
+        -d '@data.json'
+
+    secretEnv:
+    - CLOUDFLARE_API_TOKEN
+    - ARGOCD_PASSWORD      

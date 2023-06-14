@@ -28,7 +28,7 @@ module "gke" {
   enable_private_endpoint         = false
   enable_private_nodes            = true
   remove_default_node_pool        = true
-  default_max_pods_per_node       = 10
+  default_max_pods_per_node       = 20
   create_service_account          = false
   release_channel                 = "REGULAR"
   maintenance_start_time          = "02:00"
@@ -56,12 +56,12 @@ module "gke" {
   node_pools = [
     {
       name            = "npl-cafe"
-      machine_type    = "e2-micro"
+      machine_type    = "e2-medium"
       node_locations  = "southamerica-east1-a,southamerica-east1-b,southamerica-east1-c"
-      min_count       = 0
-      max_count       = 1
+      min_count       = 1
+      max_count       = 3
       local_ssd_count = 0
-      disk_size_gb    = 70
+      disk_size_gb    = 50
       disk_type       = "pd-standard"
       image_type      = "COS_CONTAINERD"
       enable_gcfs     = false

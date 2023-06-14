@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-books-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-books
+  template:
+    metadata:
+      labels:
+        app: api-books
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: api-books
+        image: southamerica-east1-docker.pkg.dev/poc-ipnet-cloud/cafe-com-cloud/cafe-com-cloud:cafe
+        ports:
+        - containerPort: 5000
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: api-books
+  name: api-books-svc
+spec:
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  selector:
+    app: api-books
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-books-ing
+spec:
+  ingressClassName: external-api-books
+  rules:
+  - http:
+      paths:
+      - path: /books
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: api-books
+            port:
+              number: 5000

@@ -37,7 +37,6 @@ steps:
     args:
       - '-c'
       - |
-#        source /workspace/vars
         docker run \
         --rm \
         -e SONAR_HOST_URL=http://34.36.237.5 \
@@ -57,7 +56,7 @@ steps:
     args:
       - '-c'
       - |
-#        source /workspace/vars
+        cd application
         docker build -t \
           southamerica-east1-docker.pkg.dev/poc-ipnet-cloud/$REPO_NAME/$REPO_NAME:$SHORT_SHA .
 
@@ -68,7 +67,6 @@ steps:
     args:
       - '-c'
       - |
-#        source /workspace/vars
 
         docker push southamerica-east1-docker.pkg.dev/poc-ipnet-cloud/$REPO_NAME/$REPO_NAME:$SHORT_SHA
 
@@ -101,6 +99,7 @@ steps:
         git clone git@github.com:amandasantana2020/cafe-com-cloud.git
         cd $REPO_NAME
         git checkout $BRANCH_NAME
+        cd application
         sed -i "s|\(.$REPO_NAME:.*\)|\/$REPO_NAME:$SHORT_SHA|g" deployment.yml
         cat deployment.yml
     volumes:

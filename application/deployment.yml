@@ -42,7 +42,6 @@ kind: Ingress
 metadata:
   name: api-books-ing
 spec:
-  ingressClassName: external-api-books
   rules:
   - http:
       paths:
@@ -50,6 +49,6 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: api-books
+            name: api-books-svc
             port:
               number: 5000

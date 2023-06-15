@@ -16,7 +16,7 @@ spec:
       - name: regcred
       containers:
       - name: api-books
-        image: southamerica-east1-docker.pkg.dev/poc-ipnet-cloud/cafe-com-cloud/cafe-com-cloud:e1a416a
+        image: southamerica-east1-docker.pkg.dev/poc-ipnet-cloud/cafe-com-cloud/cafe-com-cloud:044ab0f
         ports:
         - containerPort: 5000
 

@@ -25,6 +25,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    cloud.google.com/backend-config: '{"default": "my-backendconfig"}'
   labels:
     app: api-books
   name: api-books-svc
@@ -35,6 +37,7 @@ spec:
       targetPort: 5000
   selector:
     app: api-books
+  
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -52,3 +55,12 @@ spec:
             name: api-books-svc
             port:
               number: 5000
+              
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: my-backendconfig
+spec:
+  healthCheck:
+    requestPath: /books
